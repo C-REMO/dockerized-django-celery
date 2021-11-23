@@ -1,0 +1,60 @@
+version: "1.0.0"
+services:
+  # Redis
+  redis:
+    image: redis:alpine
+    container_name: redis
+
+  # PostgreSQL DB
+  db:
+    image: postgres
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=test_db
+      - POSTGRES_USER=test_user
+      - POSTGRES_PASSWORD=test_pass
+    container_name: postgres_db
+  
+  # Django APP
+  app:
+    build: .
+    volumes:
+      - .:/django
+    ports:
+      - 8888:8888
+    image: app:django
+    container_name: django_app
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8888"
+    depends_on:
+      - db
+
+  # Celery
+  celery:
+    restart: always
+    build:
+      context: .
+    command: celery -A settings worker -l info
+    volumes:
+      - .:/django
+    container_name: celery
+    depends_on:
+      - redis
+      - db
+      - app
+
+  # Celery-beat
+  celery-beat:
+    restart: always
+    build:
+      context: .
+    command: celery -A settings beat -l info
+    volumes:
+      - .:/django
+    container_name: celery_beat
+    depends_on:
+      - redis
+      - db
+      - app

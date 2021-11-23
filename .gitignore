@@ -1,0 +1,19 @@
+# Python
+*.pyc
+__pycache__/
+
+# Dockerized PostrgreSQL DB
+data/
+
+# Log files
+*.log
+
+# virtual environments
+.env
+
+# VSCode settings
+.vscode
+
+# Random
+celerybeat-schedule
+db.sqlite3
